@@ -59,7 +59,7 @@ log_ping() {
 log_arping() {
 	rm -f arping.log
 	sudo arping -I $3 -c $2 $1 > arping.log
-	cat arping.log | sed -n -e 's/^rtt\s[a-z\/]*\s=\s[0-9.]*\/\([0-9.]*\).*/\1/p' >> arping.log
+	cat arping.log | sed -n -e 's/^rtt\s[a-z\/-]*\s=\s[0-9.]*\/\([0-9.]*\)\/.*/\1/p' >> arping.log
 }
 
 if [ $# -lt 4 ]
