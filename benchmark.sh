@@ -73,7 +73,11 @@ fi
 log_cpu $3 &
 log_net $2 $3 &
 log_arping $1 $4 $2 &
-log_ping $1 $4 && terminate &
+pid1=$!
+log_ping $1 $4 &
+pid2=$!
 
-wait
+wait $pid1
+wait $pid2
+terminate
 echo "Something weird happened"
