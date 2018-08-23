@@ -1,7 +1,23 @@
 #!/bin/bash
 
+source config.sh
+
 log_net(){
-	./log_network.sh "$@"
+		if [ $# -lt 2 ]
+	then
+		echo -n "Usage: "
+		echo -n $0
+		echo " <iface> <period>"
+		exit
+	fi
+
+	rm -f $iflog
+	while :
+	do
+		date +%s >> $iflog
+		ifconfig $1 >> $iflog
+		sleep $2
+	done
 }
 
 load_net(){
@@ -9,11 +25,32 @@ load_net(){
 }
 
 load_cpu(){
-	./load_cpu.sh "$@"
+	corecount=$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)
+
+	if [ $# -gt 0 ]
+	then
+		corecount=$1
+	fi
+
+	stress --cpu $corecount
 }
 
 log_cpu(){
-	./log_cpu.sh "$@"
+	if [ $# -lt 1 ]
+	then
+		echo -n "Usage: "
+		echo -n $0
+		echo " <period>"
+		exit
+	fi
+
+	rm -f $cpulog
+	while :
+	do
+		date +%s >> $cpulog
+		cat /proc/loadavg >> $cpulog
+		sleep $1
+	done
 }
 
 terminate() {
