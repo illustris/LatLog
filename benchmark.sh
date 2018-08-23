@@ -58,13 +58,22 @@ log_ping() {
 
 log_arping() {
 	rm -f arping.log
-	sudo arping -c $2 $1 > arping.log
+	sudo arping -I $3 -c $2 $1 > arping.log
 	cat arping.log | sed -n -e 's/^rtt\s[a-z\/]*\s=\s[0-9.]*\/\([0-9.]*\).*/\1/p' >> arping.log
 }
 
-log_cpu 1 &
-log_net wlp2s0 1 &
-log_ping localhost 5 && terminate &
+if [ $# -lt 4 ]
+then
+	echo -n "Usage: "
+	echo -n $0
+	echo " [destination IP] [network interface] [period] [count]"
+	exit
+fi
+
+log_cpu $3 &
+log_net $2 $3 &
+log_arping $1 $4 $2 &
+log_ping $1 $4 && terminate &
 
 wait
 echo "Something weird happened"
