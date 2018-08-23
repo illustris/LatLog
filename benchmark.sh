@@ -52,14 +52,14 @@ terminate() {
 
 log_ping() {
 	rm -f ping.log
-	ping -c $2 $1 > ping.log
-	cat ping.log | sed -n -e 's/^rtt\s[a-z\/]*\s=\s[0-9.]*\/\([0-9.]*\).*/\1/p' >> ping.log
+	ping -c $2 $1 | while read pong; do echo "$(date +%s%N): $pong"; done > ping.log
+	cat ping.log | sed -n -e 's/.*rtt\s[a-z\/]*\s=\s[0-9.]*\/\([0-9.]*\).*/\1/p' >> ping.log
 }
 
 log_arping() {
 	rm -f arping.log
-	sudo arping -I $3 -c $2 $1 > arping.log
-	cat arping.log | sed -n -e 's/^rtt\s[a-z\/-]*\s=\s[0-9.]*\/\([0-9.]*\)\/.*/\1/p' >> arping.log
+	sudo arping -I $3 -c $2 $1 | while read pong; do echo "$(date +%s%N): $pong"; done > arping.log
+	cat arping.log | sed -n -e 's/.*rtt\s[a-z\/-]*\s=\s[0-9.]*\/\([0-9.]*\)\/.*/\1/p' >> arping.log
 }
 
 if [ $# -lt 4 ]
