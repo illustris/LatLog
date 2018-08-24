@@ -79,5 +79,9 @@ pid2=$!
 
 wait $pid1
 wait $pid2
+pingav=$(cat ping.log | tail -n1)
+arpingav=$(cat arping.log | tail -n1)
+printf "ping: %s\narping: %s\n" "$pingav" "$arpingav"
+
 terminate
 echo "Something weird happened"
