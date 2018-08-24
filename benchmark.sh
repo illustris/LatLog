@@ -81,7 +81,17 @@ wait $pid1
 wait $pid2
 pingav=$(cat ping.log | tail -n1)
 arpingav=$(cat arping.log | tail -n1)
-printf "ping: %s\narping: %s\n" "$pingav" "$arpingav"
+
+rxbytes=$(cat iface.log | sed -ne 's/.*\sRX.*bytes\s\([0-9]*\).*$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+txbytes=$(cat iface.log | sed -ne 's/.*\sTX.*bytes\s\([0-9]*\).*$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+tbytes=$(expr $rxbytes + $txbytes)
+duration=$(cat iface.log | sed -ne 's/^\([0-9]*\)\b$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+tspeed=$(expr $txbytes / $duration)
+rspeed=$(expr $rxbytes / $duration)
+speed=$(expr $tbytes / $duration)
+
+printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed"
+
 
 terminate
 echo "Something weird happened"
