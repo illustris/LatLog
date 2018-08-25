@@ -66,6 +66,8 @@ then
 	exit
 fi
 
+sudo id # Just to acquire sudo
+
 log_cpu $3 &
 log_net $2 $3 &
 log_arping $1 $4 $2 &
@@ -88,8 +90,8 @@ speed=$(expr $tbytes / $duration)
 
 count=$(cat cpu.log | wc -l)
 cputot=$(cat cpu.log | grep -o "[0-9]*\.[0-9]" | paste -s -d+ - | bc | sed -ne 's/^\([0-9]*\)\..*/\1/p')
-cputot=$(expr 100 - $cputot)
-avcpu=$(expr $cputot / $count)
+avcpuidle=$(expr $cputot / $count)
+avcpu=$((100 - $avcpuidle))
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
 
