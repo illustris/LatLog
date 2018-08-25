@@ -69,15 +69,21 @@ fi
 
 sudo id # Just to acquire sudo
 
-log_cpu $3 &
-log_net $2 $3 &
 log_arping $1 $4 $2 &
 pid1=$!
 log_ping $1 $4 &
 pid2=$!
+log_cpu $3 &
+pid3=$!
+log_net $2 $3 &
+pid4=$!
+
 
 wait $pid1
 wait $pid2
+kill $pid3
+kill $pid4
+
 pingav=$(cat ping.log | tail -n1)
 arpingav=$(cat arping.log | tail -n1)
 
@@ -98,6 +104,3 @@ printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$a
 # generate timeseries for ping and arping
 cat arping.log | sed -n -e 's/^\([0-9:]*\)\s.*time=\([0-9.]*\).*$/\1\2/p' > ts_arping.log
 cat ping.log | sed -n -e 's/^\([0-9:]*\)\s.*time=\([0-9.]*\).*$/\1\2/p' > ts_ping.log
-
-terminate
-echo "Something weird happened"
