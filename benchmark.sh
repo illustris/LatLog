@@ -63,11 +63,17 @@ if [ $# -lt 4 ]
 then
 	echo -n "Usage: "
 	echo -n $0
-	echo " [destination IP] [network interface] [period] [count]"
+	echo " [destination IP] [network interface] [period] [count] [(optional): remote logs[y/N]]"
 	exit
 fi
 
 sudo id # Just to acquire sudo
+
+# if remote logging is enabled, trigger logging
+if [ $5 == 'y' ]
+then
+	nc -znv $1 $rport
+fi
 
 log_arping $1 $4 $2 &
 pid1=$!
@@ -83,6 +89,15 @@ wait $pid1
 wait $pid2
 kill $pid3
 kill $pid4
+
+# terminate remote logging, fetch remote logs
+if [ $5 == 'y' ]
+then
+	nc -znv $1 $rport
+	nc $1 $rport > r_tx_$iflog
+	nc $1 $rport > r_rx_$iflog
+	nc $1 $rport > r_$cpulog
+fi
 
 pingav=$(cat ping.log | tail -n1)
 arpingav=$(cat arping.log | tail -n1)
