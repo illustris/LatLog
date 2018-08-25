@@ -95,6 +95,9 @@ avcpu=$((100 - $avcpuidle))
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
 
+# generate timeseries for ping and arping
+cat arping.log | sed -n -e 's/^\([0-9:]*\)\s.*time=\([0-9.]*\).*$/\1\2/p' > ts_arping.log
+cat ping.log | sed -n -e 's/^\([0-9:]*\)\s.*time=\([0-9.]*\).*$/\1\2/p' > ts_ping.log
 
 terminate
 echo "Something weird happened"
