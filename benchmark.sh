@@ -39,7 +39,7 @@ log_cpu(){
 
 	rm -f $cpulog
 
-	stdbuf -oL mpstat $1 | while read l; do echo "$(date +%s): $l"; done | stdbuf -o0 sed -ne 's/^\([0-9]*:\).*\(\s[0-9.]*\)\b$/\1\2/p' >> $cpulog
+	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> $cpulog
 }
 
 terminate() {
@@ -89,9 +89,8 @@ rspeed=$(expr $rxbytes / $duration)
 speed=$(expr $tbytes / $duration)
 
 count=$(cat cpu.log | wc -l)
-cputot=$(cat cpu.log | grep -o "[0-9]*\.[0-9]" | paste -s -d+ - | bc | sed -ne 's/^\([0-9]*\)\..*/\1/p')
-avcpuidle=$(expr $cputot / $count)
-avcpu=$((100 - $avcpuidle))
+cputot=$(cat cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
+avcpu=$(expr $cputot / $count)
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
 
