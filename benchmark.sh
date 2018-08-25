@@ -88,6 +88,7 @@ speed=$(expr $tbytes / $duration)
 
 count=$(cat cpu.log | wc -l)
 cputot=$(cat cpu.log | grep -o "[0-9]*\.[0-9]" | paste -s -d+ - | bc | sed -ne 's/^\([0-9]*\)\..*/\1/p')
+cputot=$(expr 100 - $cputot)
 avcpu=$(expr $cputot / $count)
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
