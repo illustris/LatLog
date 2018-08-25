@@ -11,11 +11,12 @@ log_net(){
 		exit
 	fi
 
-	rm -f $iflog
+	rm -f tx_$iflog
+	rm -f rx_$iflog
 	while :
 	do
-		date +%s >> $iflog
-		ifconfig $1 >> $iflog
+		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/tx_bytes)" >> tx_$iflog
+		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/rx_bytes)" >> rx_$iflog
 		sleep $2
 	done
 }
@@ -80,10 +81,10 @@ wait $pid2
 pingav=$(cat ping.log | tail -n1)
 arpingav=$(cat arping.log | tail -n1)
 
-rxbytes=$(cat iface.log | sed -ne 's/.*\sRX.*bytes\s\([0-9]*\).*$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
-txbytes=$(cat iface.log | sed -ne 's/.*\sTX.*bytes\s\([0-9]*\).*$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+rxbytes=$(cat rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+txbytes=$(cat tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 tbytes=$(expr $rxbytes + $txbytes)
-duration=$(cat iface.log | sed -ne 's/^\([0-9]*\)\b$/\1/p' | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+duration=$(cat tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 tspeed=$(expr $txbytes / $duration)
 rspeed=$(expr $rxbytes / $duration)
 speed=$(expr $tbytes / $duration)
