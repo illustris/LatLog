@@ -94,9 +94,9 @@ kill $pid4
 if [ $5 == 'y' ]
 then
 	nc -znv $1 $rport
-	nc $1 $rport > r_tx_$iflog
-	nc $1 $rport > r_rx_$iflog
-	nc $1 $rport > r_$cpulog
+	nc -d $1 $rport > r_tx_$iflog
+	nc -d $1 $rport > r_rx_$iflog
+	nc -d $1 $rport > r_$cpulog
 fi
 
 pingav=$(cat ping.log | tail -n1)

@@ -57,6 +57,6 @@ kill $pid1
 kill $pid2
 
 # send logs
-cat remote_tx_$iflog | nc -lp $rport
-cat remote_rx_$iflog | nc -lp $rport
-cat remote_$cpulog | nc -lp $rport
+cat remote_tx_$iflog | nc -N -lp $rport
+cat remote_rx_$iflog | nc -N -lp $rport
+cat remote_$cpulog | nc -N -lp $rport
