@@ -40,6 +40,14 @@ killtree() {
 	kill -9 $1
 }
 
+if [ $# -lt 4 ]
+then
+	echo -n "Usage: "
+	echo -n $0
+	echo " [iface] [period]"
+	exit
+fi
+
 sudo id # Just to acquire sudo
 
 # wait for first remote trigger
