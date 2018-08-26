@@ -43,8 +43,9 @@ log_cpu(){
 	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> $cpulog
 }
 
-terminate() {
-	kill -- -$(ps -o pgid= $$ | grep -o [0-9]*)
+killtree() {
+	pkill -TERM -P $1
+	kill -9 $1
 }
 
 log_ping() {
@@ -72,33 +73,54 @@ sudo id # Just to acquire sudo
 # if remote logging is enabled, trigger logging
 if [ $5 == 'y' ]
 then
+	echo "sending trigger for remote logging"
 	nc -znv $1 $rport
 fi
 
 log_arping $1 $4 $2 &
 pid1=$!
+printf "arping started with PID %s\n" "$pid1"
+pstree -lp $pid1
 log_ping $1 $4 &
 pid2=$!
+printf "ping started with PID %s\n" "$pid2"
+pstree -lp $pid2
 log_cpu $3 &
 pid3=$!
+printf "cpu logging started with PID %s\n" "$pid3"
+pstree -lp $pid3
 log_net $2 $3 &
 pid4=$!
+printf "network logging started with PID %s\n" "$pid4"
+pstree -lp $pid4
 
-
+echo "waiting for ping/arping to finish"
+pstree -lp $$
 wait $pid1
 wait $pid2
-kill $pid3
-kill $pid4
+echo "killing CPU logging"
+killtree $pid3
+echo "killing net logging"
+killtree $pid4
+pstree -lp $$
 
 # terminate remote logging, fetch remote logs
 if [ $5 == 'y' ]
 then
+	echo "sending trigger to end remote logging"
 	nc -znv $1 $rport
+	sleep 2
 	nc -d $1 $rport > r_tx_$iflog
+	echo "Fetched r_tx log"
+	sleep 2
 	nc -d $1 $rport > r_rx_$iflog
+	echo "Fetched r_rx log"
+	sleep 2
 	nc -d $1 $rport > r_$cpulog
+	echo "Fetched r_cpu log"
 fi
 
+echo "parsing logs"
 pingav=$(cat ping.log | tail -n1)
 arpingav=$(cat arping.log | tail -n1)
 

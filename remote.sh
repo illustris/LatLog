@@ -35,28 +35,41 @@ log_cpu(){
 	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> remote_$cpulog
 }
 
-terminate() {
-	kill -- -$(ps -o pgid= $$ | grep -o [0-9]*)
+killtree() {
+	pkill -TERM -P $1
+	kill -9 $1
 }
 
 sudo id # Just to acquire sudo
 
 # wait for first remote trigger
+echo "waiting for first remote trigger"
 cat /dev/null | nc -lp $rport
 
 # start logging
 log_cpu $2 &
 pid1=$!
+printf "cpu logging started with PID %s\n" "$pid1"
 log_net $1 $2 &
 pid2=$!
+printf "network logging started with PID %s\n" "$pid2"
+
+pstree -lp $$
 
 # wait for second remote trigger
+echo "waiting for second remote trigger"
 cat /dev/null | nc -l -p $rport
 
-kill $pid1
-kill $pid2
+killtree $pid1
+killtree $pid2
+echo "killed logging processes"
+pstree -lp $$
 
 # send logs
+echo "sending logs"
 cat remote_tx_$iflog | nc -N -lp $rport
+echo "remote_tx"
 cat remote_rx_$iflog | nc -N -lp $rport
+echo "remote_rx"
 cat remote_$cpulog | nc -N -lp $rport
+echo "remote_cpu"
