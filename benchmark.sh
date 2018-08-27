@@ -74,7 +74,7 @@ sudo id # Just to acquire sudo
 if [ $5 == 'y' ]
 then
 	echo "sending trigger for remote logging"
-	nc -znv $1 $rport
+	./nc -znv $1 $rport
 fi
 
 log_arping $1 $4 $2 &
@@ -108,15 +108,15 @@ pstree -lp $$
 if [ $5 == 'y' ]
 then
 	echo "sending trigger to end remote logging"
-	nc -znv $1 $rport
+	./nc -znv $1 $rport
 	sleep 2
-	nc -d $1 $rport > r_tx_$iflog
+	./nc -d $1 $rport > r_tx_$iflog
 	echo "Fetched r_tx log"
 	sleep 2
-	nc -d $1 $rport > r_rx_$iflog
+	./nc -d $1 $rport > r_rx_$iflog
 	echo "Fetched r_rx log"
 	sleep 2
-	nc -d $1 $rport > r_$cpulog
+	./nc -d $1 $rport > r_$cpulog
 	echo "Fetched r_cpu log"
 fi
 
@@ -137,6 +137,24 @@ cputot=$(cat cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
 avcpu=$(expr $cputot / $count)
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
+
+if [ $5 == 'y' ]
+then
+	rxbytes=$(cat r_rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+	txbytes=$(cat r_tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+	tbytes=$(expr $rxbytes + $txbytes)
+	duration=$(cat t_tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+	tspeed=$(expr $txbytes / $duration)
+	rspeed=$(expr $rxbytes / $duration)
+	speed=$(expr $tbytes / $duration)
+
+	count=$(cat r_cpu.log | wc -l)
+	cputot=$(cat r_cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
+	avcpu=$(expr $cputot / $count)
+	printf "Remote stats:\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$tspeed" "$rspeed" "$speed" "$avcpu"
+fi
+
+
 
 # generate timeseries for ping and arping
 cat arping.log | sed -n -e 's/^\([0-9:]*\)\s.*time=\([0-9.]*\).*$/\1\2/p' > ts_arping.log
