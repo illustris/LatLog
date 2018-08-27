@@ -143,7 +143,7 @@ then
 	rxbytes=$(cat r_rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 	txbytes=$(cat r_tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 	tbytes=$(expr $rxbytes + $txbytes)
-	duration=$(cat t_tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+	duration=$(cat r_tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 	tspeed=$(expr $txbytes / $duration)
 	rspeed=$(expr $rxbytes / $duration)
 	speed=$(expr $tbytes / $duration)
