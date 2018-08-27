@@ -40,7 +40,7 @@ killtree() {
 	kill -9 $1
 }
 
-if [ $# -lt 4 ]
+if [ $# -lt 2 ]
 then
 	echo -n "Usage: "
 	echo -n $0
