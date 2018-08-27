@@ -52,7 +52,7 @@ sudo id # Just to acquire sudo
 
 # wait for first remote trigger
 echo "waiting for first remote trigger"
-cat /dev/null | nc -lp $rport
+cat /dev/null | ./nc -lp $rport
 
 # start logging
 log_cpu $2 &
@@ -66,7 +66,7 @@ pstree -lp $$
 
 # wait for second remote trigger
 echo "waiting for second remote trigger"
-cat /dev/null | nc -l -p $rport
+cat /dev/null | ./nc -l -p $rport
 
 killtree $pid1
 killtree $pid2
@@ -75,9 +75,9 @@ pstree -lp $$
 
 # send logs
 echo "sending logs"
-cat remote_tx_$iflog | nc -N -lp $rport
+cat remote_tx_$iflog | ./nc -N -lp $rport
 echo "remote_tx"
-cat remote_rx_$iflog | nc -N -lp $rport
+cat remote_rx_$iflog | ./nc -N -lp $rport
 echo "remote_rx"
-cat remote_$cpulog | nc -N -lp $rport
+cat remote_$cpulog | ./nc -N -lp $rport
 echo "remote_cpu"
