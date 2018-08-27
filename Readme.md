@@ -1,6 +1,11 @@
 Latency benchmark
 ===
 
+# Dependencies
+```
+sudo apt install bc sysstat arping
+```
+
 # Benchmark
 Logs ping times, CPU and network utilization.
 Usage:
