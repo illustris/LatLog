@@ -64,6 +64,8 @@ run() {
 	remoteport=''
 	remotelogging=$5
 
+	mkdir -p logs/$1
+
 	# if remote logging is enabled, trigger logging
 	if [ $remotelogging == 'y' ]
 	then
@@ -135,7 +137,7 @@ run() {
 	cputot=$(cat cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
 	avcpu=$(expr $cputot / $count)
 
-	printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee $1_stats.log
+	printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee logs/$1/$(date +%s).log
 
 	if [ $remotelogging == 'y' ]
 	then
@@ -150,7 +152,7 @@ run() {
 		count=$(cat r_cpu.log | wc -l)
 		cputot=$(cat r_cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
 		avcpu=$(expr $cputot / $count)
-		printf "Remote stats:\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee -a $1_stats.log
+		printf "Remote stats:\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee -a logs/$1/$(date +%s).log
 	fi
 
 
