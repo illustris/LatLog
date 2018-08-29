@@ -116,15 +116,15 @@ pstree -lp $$
 if [ $remotelogging == 'y' ]
 then
 	echo "sending trigger to end remote logging"
-	./nc -znv $1 $rport
+	./nc -znv $1 $remoteport
 	sleep 2
-	./nc -d $1 $rport > r_tx_$iflog
+	./nc -d $1 $remoteport > r_tx_$iflog
 	echo "Fetched r_tx log"
 	sleep 2
-	./nc -d $1 $rport > r_rx_$iflog
+	./nc -d $1 $remoteport > r_rx_$iflog
 	echo "Fetched r_rx log"
 	sleep 2
-	./nc -d $1 $rport > r_$cpulog
+	./nc -d $1 $remoteport > r_$cpulog
 	echo "Fetched r_cpu log"
 fi
 

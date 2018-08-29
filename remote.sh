@@ -52,7 +52,7 @@ sudo id # Just to acquire sudo
 
 # wait for first remote trigger
 echo "waiting for first remote trigger"
-cat /dev/null | ./nc -lp $rport
+echo 65123 | ./nc -N -lp $rport
 
 # start logging
 log_cpu $2 &
