@@ -172,6 +172,4 @@ fi
 
 sudo echo "" # Just to acquire sudo
 
-while read rem; do
-	run $rem $2 $3 $4 $5
-done <remotes.list
+shuf $1 | while read r; do echo "$r"; done
