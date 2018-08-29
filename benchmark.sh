@@ -172,4 +172,4 @@ fi
 
 sudo echo "" # Just to acquire sudo
 
-shuf $1 | while read r; do echo "$r"; done
+shuf $1 | while read rem; do run $rem $2 $3 $4 $5; done
