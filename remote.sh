@@ -2,21 +2,28 @@
 
 source config.sh
 
+randpath() {
+	hsh=$(date +%s%N | md5sum | grep -o "[a-f0-9]*")
+	fullpath=$(printf "/dev/shm/latlog/%s\n" "$hsh")
+	mkdir -p $fullpath
+	echo $fullpath
+}
+
 log_net(){
 		if [ $# -lt 2 ]
 	then
 		echo -n "Usage: "
 		echo -n $0
-		echo " <iface> <period>"
+		echo " [iface] [period] [path]"
 		exit
 	fi
 
-	rm -f remote_tx_$iflog
-	rm -f remote_rx_$iflog
+	rm -f $3/remote_tx_$iflog
+	rm -f $3/remote_rx_$iflog
 	while :
 	do
-		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/tx_bytes)" >> remote_tx_$iflog
-		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/rx_bytes)" >> remote_rx_$iflog
+		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/tx_bytes)" >> $3/remote_tx_$iflog
+		printf "%s: %s\n" "$(date +%s)" "$(cat /sys/class/net/$1/statistics/rx_bytes)" >> $3/remote_rx_$iflog
 		sleep $2
 	done
 }
@@ -26,13 +33,13 @@ log_cpu(){
 	then
 		echo -n "Usage: "
 		echo -n $0
-		echo " <period>"
+		echo " [period] [path]"
 		exit
 	fi
 
-	rm -f remote_$cpulog
+	rm -f $2/remote_$cpulog
 
-	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> remote_$cpulog
+	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> $2/remote_$cpulog
 }
 
 killtree() {
@@ -60,10 +67,12 @@ getport() {
 
 logging_handler() {
 	# start logging
-	log_cpu $2 &
+	logpath=$(randpath)
+	printf "Logging to %s\n" "$logpath"
+	log_cpu $2 $logpath &
 	pid1=$!
 	printf "cpu logging started with PID %s\n" "$pid1"
-	log_net $1 $2 &
+	log_net $1 $2 $logpath &
 	pid2=$!
 	printf "network logging started with PID %s\n" "$pid2"
 
@@ -80,11 +89,11 @@ logging_handler() {
 
 	# send logs
 	echo "sending logs"
-	cat remote_tx_$iflog | ./nc -N -lp $3
+	cat $logpath/remote_tx_$iflog | ./nc -N -lp $3
 	echo "remote_tx"
-	cat remote_rx_$iflog | ./nc -N -lp $3
+	cat $logpath/remote_rx_$iflog | ./nc -N -lp $3
 	echo "remote_rx"
-	cat remote_$cpulog | ./nc -N -lp $3
+	cat $logpath/remote_$cpulog | ./nc -N -lp $3
 	echo "remote_cpu"
 }
 
