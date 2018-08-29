@@ -70,11 +70,19 @@ fi
 
 sudo id # Just to acquire sudo
 
+remoteport=''
+remotelogging=$5
+
 # if remote logging is enabled, trigger logging
-if [ $5 == 'y' ]
+if [ $remotelogging == 'y' ]
 then
 	echo "sending trigger for remote logging"
-	./nc -znv $1 $rport
+	remoteport=$(./nc -d $1 $rport)
+	if [ -z "$remoteport" ]
+	then
+		echo "Failed to get remote port"
+		remotelogging='n'
+	fi
 fi
 
 log_arping $1 $4 $2 &
@@ -105,7 +113,7 @@ killtree $pid4
 pstree -lp $$
 
 # terminate remote logging, fetch remote logs
-if [ $5 == 'y' ]
+if [ $remotelogging == 'y' ]
 then
 	echo "sending trigger to end remote logging"
 	./nc -znv $1 $rport
@@ -138,7 +146,7 @@ avcpu=$(expr $cputot / $count)
 
 printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu"
 
-if [ $5 == 'y' ]
+if [ $remotelogging == 'y' ]
 then
 	rxbytes=$(cat r_rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
 	txbytes=$(cat r_tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
