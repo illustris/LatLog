@@ -5,3 +5,7 @@ scratch.sh
 # log files #
 #############
 *.log
+
+# list of remote hosts #
+########################
+remotes.list
