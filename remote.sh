@@ -58,14 +58,6 @@ getport() {
 	echo $port
 }
 
-if [ $# -lt 2 ]
-then
-	echo -n "Usage: "
-	echo -n $0
-	echo " [iface] [period]"
-	exit
-fi
-
 logging_handler() {
 	# start logging
 	log_cpu $2 &
@@ -95,6 +87,14 @@ logging_handler() {
 	cat remote_$cpulog | ./nc -N -lp $3
 	echo "remote_cpu"
 }
+
+if [ $# -lt 2 ]
+then
+	echo -n "Usage: "
+	echo -n $0
+	echo " [iface] [period]"
+	exit
+fi
 
 sudo id # Just to acquire sudo
 
