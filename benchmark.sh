@@ -44,18 +44,18 @@ log_cpu(){
 }
 
 killtree() {
-	pkill -TERM -P $1
-	kill -9 $1
+	pkill -TERM -P $1 1>&2
+	kill -9 $1 1>&2
 }
 
 log_ping() {
-	rm -f ping.log
+	rm -f ping.log 1>&2
 	ping -c $2 $1 | while read pong; do echo "$(date +%s%N): $pong"; done > ping.log
 	cat ping.log | sed -n -e 's/.*rtt\s[a-z\/]*\s=\s[0-9.]*\/\([0-9.]*\).*/\1/p' >> ping.log
 }
 
 log_arping() {
-	rm -f arping.log
+	rm -f arping.log 1>&2
 	sudo arping -I $3 -c $2 $1 | while read pong; do echo "$(date +%s%N): $pong"; done > arping.log
 	cat arping.log | sed -n -e 's/.*rtt\s[a-z\/-]*\s=\s[0-9.]*\/\([0-9.]*\)\/.*/\1/p' >> arping.log
 }
@@ -64,64 +64,64 @@ run() {
 	remoteport=''
 	remotelogging=$5
 
-	mkdir -p logs/$1
+	mkdir -p logs/$1 1>&2
 
 	# if remote logging is enabled, trigger logging
 	if [ $remotelogging == 'y' ]
 	then
-		printf "sending trigger to %s for logging on port %s\n" "$1" "$rport"
+		printf "sending trigger to %s for logging on port %s\n" "$1" "$rport" 1>&2
 		remoteport=$(./nc -w 5 -d $1 $rport)
 		if [ -z "$remoteport" ]
 		then
-			echo "Failed to get remote port"
+			echo "Failed to get remote port" 1>&2
 			remotelogging='n'
 		fi
 	fi
 
 	log_arping $1 $4 $2 &
 	pid1=$!
-	printf "arping started with PID %s\n" "$pid1"
-	pstree -lp $pid1
+	printf "arping started with PID %s\n" "$pid1" 1>&2
+	pstree -lp $pid1 1>&2
 	log_ping $1 $4 &
 	pid2=$!
-	printf "ping started with PID %s\n" "$pid2"
-	pstree -lp $pid2
+	printf "ping started with PID %s\n" "$pid2" 1>&2
+	pstree -lp $pid2 1>&2
 	log_cpu $3 &
 	pid3=$!
-	printf "cpu logging started with PID %s\n" "$pid3"
-	pstree -lp $pid3
+	printf "cpu logging started with PID %s\n" "$pid3" 1>&2
+	pstree -lp $pid3 1>&2
 	log_net $2 $3 &
 	pid4=$!
-	printf "network logging started with PID %s\n" "$pid4"
-	pstree -lp $pid4
+	printf "network logging started with PID %s\n" "$pid4" 1>&2
+	pstree -lp $pid4 1>&2
 
-	echo "waiting for ping/arping to finish"
-	pstree -lp $$
-	wait $pid1
-	wait $pid2
-	echo "killing CPU logging"
+	echo "waiting for ping/arping to finish" 1>&2
+	pstree -lp $$ 1>&2
+	wait $pid1 1>&2
+	wait $pid2 1>&2
+	echo "killing CPU logging" 1>&2
 	killtree $pid3
-	echo "killing net logging"
+	echo "killing net logging" 1>&2
 	killtree $pid4
-	pstree -lp $$
+	pstree -lp $$ 1>&2
 
 	# terminate remote logging, fetch remote logs
 	if [ $remotelogging == 'y' ]
 	then
-		echo "sending trigger to end remote logging"
+		echo "sending trigger to end remote logging" 1>&2
 		./nc -zv $1 $remoteport
 		sleep 2
 		./nc -d $1 $remoteport > r_tx_$iflog
-		echo "Fetched r_tx log"
+		echo "Fetched r_tx log" 1>&2
 		sleep 2
 		./nc -d $1 $remoteport > r_rx_$iflog
-		echo "Fetched r_rx log"
+		echo "Fetched r_rx log" 1>&2
 		sleep 2
 		./nc -d $1 $remoteport > r_$cpulog
-		echo "Fetched r_cpu log"
+		echo "Fetched r_cpu log" 1>&2
 	fi
 
-	echo "parsing logs"
+	echo "parsing logs" 1>&2
 	pingav=$(cat ping.log | tail -n1)
 	arpingav=$(cat arping.log | tail -n1)
 
