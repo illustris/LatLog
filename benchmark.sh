@@ -109,7 +109,7 @@ run() {
 	if [ $remotelogging == 'y' ]
 	then
 		echo "sending trigger to end remote logging"
-		./nc -znv $1 $remoteport
+		./nc -zv $1 $remoteport
 		sleep 2
 		./nc -d $1 $remoteport > r_tx_$iflog
 		echo "Fetched r_tx log"
@@ -137,23 +137,28 @@ run() {
 	cputot=$(cat cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
 	avcpu=$(expr $cputot / $count)
 
-	printf "ping: %s\narping: %s\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee logs/$1/$(date +%s).log
+	fname=$(date +%s)
+	printf '{"timestamp":%s,"src_host":"%s","src_service":"%s","dst_host":"%s","dst_service":"%s","ping":%s,"arping":%s,"tbytes":%s,"rbytes":%s,"total_bytes":%s,"cpu":%s' "$(date +%s)" "$(hostname -f)" "$7" "$1" "$6" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | sed 's/:,/: null,/g' | tee logs/$1/$fname.log
 
 	if [ $remotelogging == 'y' ]
 	then
-		rxbytes=$(cat r_rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
-		txbytes=$(cat r_tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
-		tbytes=$(expr $rxbytes + $txbytes)
-		duration=$(cat r_tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
-		tspeed=$(expr $txbytes / $duration)
-		rspeed=$(expr $rxbytes / $duration)
-		speed=$(expr $tbytes / $duration)
+		r_rxbytes=$(cat r_rx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+		r_txbytes=$(cat r_tx_$iflog | cut -d" " -f 2 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+		r_tbytes=$(expr $r_rxbytes + $r_txbytes)
+		r_duration=$(cat r_tx_$iflog | cut -d":" -f1 | sed -e 1b -e '$!d' | tac | paste -s -d- - | bc)
+		r_tspeed=$(expr $r_txbytes / $r_duration)
+		r_rspeed=$(expr $r_rxbytes / $r_duration)
+		r_speed=$(expr $r_tbytes / $r_duration)
 
-		count=$(cat r_cpu.log | wc -l)
-		cputot=$(cat r_cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
-		avcpu=$(expr $cputot / $count)
-		printf "Remote stats:\nTx: %s\nRx: %s\nTot: %s\navCPU:%s\n" "$tspeed" "$rspeed" "$speed" "$avcpu" | tee -a logs/$1/$(date +%s).log
+		r_count=$(cat r_cpu.log | wc -l)
+		r_cputot=$(cat r_cpu.log | cut -d' ' -f2 | paste -s -d+ - | bc | grep -o "^[0-9]*")
+		r_avcpu=$(expr $r_cputot / $r_count)
+		printf ',"r_tbytes":%s,"r_rbytes":%s,"r_total_bytes":%s,"r_cpu":%s' "$r_tspeed" "$r_rspeed" "$r_speed" "$r_avcpu" | sed 's/:,/: null,/g' | tee -a logs/$1/$fname.log
+	else
+		printf ',"r_tbytes":null,"r_rbytes":null,"r_total_bytes":null,"r_cpu":null' | tee -a logs/$1/$fname.log
 	fi
+
+	echo "}" | tee -a logs/$1/$fname.log
 
 
 
@@ -166,10 +171,21 @@ if [ $# -lt 4 ]
 then
 	echo -n "Usage: "
 	echo -n $0
-	echo " [host list file] [network interface] [period] [count] [(optional): remote logs[y/N]]"
+	echo " [host list file] [network interface] [period] [count] [remote logs[y/sN]]"
 	exit
 fi
 
-sudo echo "" # Just to acquire sudo
+sudo echo -n "" # Just to acquire sudo
+self_ty=$(cat $1 | grep $(hostname -f) | grep -Eo "\w*$")
+self_host=$(cat $1 | grep $(hostname -f) | grep -Eo "^\w*")
+shuf $1 | while read -r rem ty
+do
+	if [ "$rem" != "$self_host" ]
+	then
+		run $rem $2 $3 $4 $5 $ty $self_ty
+	fi
+done
 
-shuf $1 | while read rem; do run $rem $2 $3 $4 $5; done
+
+#dimension : src_host, src_service, dst_host, dst_service, arping, ping, timestamp
+#metric : ping, arping, tbytes, rbytes, total_bytes, cpu, r_tbytes, r_rbytes, r_total_bytes, r_cpu
