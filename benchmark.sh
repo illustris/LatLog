@@ -138,7 +138,7 @@ run() {
 	avcpu=$(expr $cputot / $count)
 
 	fname=$(date +%s)
-	printf '{"timestamp":%s,"src_host":"%s","src_service":"%s","dst_host":"%s","dst_service":"%s","ping":%s,"arping":%s,"tbytes":%s,"rbytes":%s,"total_bytes":%s,"cpu":%s' "$(date +%s)" "$(hostname -f)" "$7" "$1" "$6" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | sed 's/:,/: null,/g' | tee logs/$1/$fname.log
+	printf '{"timestamp":%s,"src_host":"%s","src_service":"%s","dst_host":"%s","dst_service":"%s","ping":%s,"arping":%f,"tbytes":%s,"rbytes":%s,"total_bytes":%s,"cpu":%s' "$(date +%s)" "$(hostname -f)" "$7" "$1" "$6" "$pingav" "$arpingav" "$tspeed" "$rspeed" "$speed" "$avcpu" | sed 's/:,/: null,/g' | tee logs/$1/$fname.log
 
 	if [ $remotelogging == 'y' ]
 	then
