@@ -71,7 +71,6 @@ run() {
 	then
 		printf "sending trigger to %s for logging on port %s\n" "$1" "$rport" 1>&2
 		remoteport=$(nc -w 5 -d $1 $rport)
-		printf "Got remote port %s\n" "$remoteport"
 		if [ -z "$remoteport" ]
 		then
 			echo "Failed to get remote port" 1>&2
