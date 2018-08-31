@@ -116,6 +116,7 @@ do
 	if [ $? -gt 0 ]
 	then
 		echo "network error" 1>&2
+		exit
 	else
 		printf "starting handler on port %s\n" "$listenport" 1>&2
 		logging_handler $1 $2 $listenport &
