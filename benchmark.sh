@@ -40,7 +40,7 @@ log_cpu(){
 
 	rm -f $cpulog
 
-	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$13}' | while read l; do echo "$(date +%s): $l"; done  >> $cpulog
+	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$NF}' | while read l; do echo "$(date +%s): $l"; done  >> $cpulog
 }
 
 killtree() {
