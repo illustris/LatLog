@@ -70,7 +70,8 @@ run() {
 	if [ $remotelogging == 'y' ]
 	then
 		printf "sending trigger to %s for logging on port %s\n" "$1" "$rport" 1>&2
-		remoteport=$(LD_LIBRARY_PATH="$(pwd)/libs" ./nc -w 5 -d $1 $rport)
+		remoteport=$(nc -w 5 -d $1 $rport)
+		printf "Got remote port %s\n" "$remoteport"
 		if [ -z "$remoteport" ]
 		then
 			echo "Failed to get remote port" 1>&2
@@ -109,15 +110,15 @@ run() {
 	if [ $remotelogging == 'y' ]
 	then
 		echo "sending trigger to end remote logging" 1>&2
-		LD_LIBRARY_PATH="$(pwd)/libs" ./nc -zv $1 $remoteport
+		echo "" | nc $1 $remoteport
 		sleep 2
-		LD_LIBRARY_PATH="$(pwd)/libs" ./nc -d $1 $remoteport > r_tx_$iflog
+		nc -d $1 $remoteport > r_tx_$iflog
 		echo "Fetched r_tx log" 1>&2
 		sleep 2
-		LD_LIBRARY_PATH="$(pwd)/libs" ./nc -d $1 $remoteport > r_rx_$iflog
+		nc -d $1 $remoteport > r_rx_$iflog
 		echo "Fetched r_rx log" 1>&2
 		sleep 2
-		LD_LIBRARY_PATH="$(pwd)/libs" ./nc -d $1 $remoteport > r_$cpulog
+		nc -d $1 $remoteport > r_$cpulog
 		echo "Fetched r_cpu log" 1>&2
 	fi
 

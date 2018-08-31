@@ -80,7 +80,7 @@ logging_handler() {
 
 	# wait for second remote trigger
 	echo "waiting for second remote trigger"
-	cat /dev/null | LD_LIBRARY_PATH="$(pwd)/libs" ./nc -l -p $3
+	nc -lp $3
 
 	killtree $pid1
 	killtree $pid2
@@ -89,11 +89,11 @@ logging_handler() {
 
 	# send logs
 	echo "sending logs"
-	cat $logpath/remote_tx_$iflog | LD_LIBRARY_PATH="$(pwd)/libs" ./nc -N -lp $3
+	stdbuf -o0 cat $logpath/remote_tx_$iflog | stdbuf -o0  nc -lp $3
 	echo "remote_tx"
-	cat $logpath/remote_rx_$iflog | LD_LIBRARY_PATH="$(pwd)/libs" ./nc -N -lp $3
+	stdbuf -o0 cat $logpath/remote_rx_$iflog | stdbuf -o0  nc -lp $3
 	echo "remote_rx"
-	cat $logpath/remote_$cpulog | LD_LIBRARY_PATH="$(pwd)/libs" ./nc -N -lp $3
+	stdbuf -o0 cat $logpath/remote_$cpulog | stdbuf -o0  nc -lp $3
 	echo "remote_cpu"
 }
 
@@ -112,7 +112,12 @@ do
 	# wait for first remote trigger
 	echo "waiting for first remote trigger"
 	listenport=$(getport)
-	echo $listenport | LD_LIBRARY_PATH="$(pwd)/libs" ./nc -N -lp $rport
-	printf "starting handler on port %s\n" "$listenport"
-	logging_handler $1 $2 $listenport &
+	echo $listenport | nc -lp $rport
+	if [ $? -gt 0 ]
+	then
+		echo "network error" 1>&2
+	else
+		printf "starting handler on port %s\n" "$listenport" 1>&2
+		logging_handler $1 $2 $listenport &
+	fi
 done
