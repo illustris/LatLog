@@ -80,7 +80,7 @@ logging_handler() {
 
 	# wait for second remote trigger
 	echo "waiting for second remote trigger"
-	cat /dev/null | nc -l -p $3
+	cat /dev/null | ./nc -l -p $3
 
 	killtree $pid1
 	killtree $pid2
@@ -89,11 +89,11 @@ logging_handler() {
 
 	# send logs
 	echo "sending logs"
-	cat $logpath/remote_tx_$iflog | nc -N -lp $3
+	cat $logpath/remote_tx_$iflog | ./nc -N -lp $3
 	echo "remote_tx"
-	cat $logpath/remote_rx_$iflog | nc -N -lp $3
+	cat $logpath/remote_rx_$iflog | ./nc -N -lp $3
 	echo "remote_rx"
-	cat $logpath/remote_$cpulog | nc -N -lp $3
+	cat $logpath/remote_$cpulog | ./nc -N -lp $3
 	echo "remote_cpu"
 }
 
@@ -112,7 +112,7 @@ do
 	# wait for first remote trigger
 	echo "waiting for first remote trigger"
 	listenport=$(getport)
-	echo $listenport | nc -N -lp $rport
+	echo $listenport | ./nc -N -lp $rport
 	printf "starting handler on port %s\n" "$listenport"
 	logging_handler $1 $2 $listenport &
 done
