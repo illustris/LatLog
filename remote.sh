@@ -39,7 +39,7 @@ log_cpu(){
 
 	rm -f $2/remote_$cpulog
 
-	stdbuf -oL mpstat $1 | stdbuf -o0 awk '/all/{print 100-$NF}' | while read l; do echo "$(date +%s): $l"; done  >> $2/remote_$cpulog
+	stdbuf -oL mpstat $1 | while read l;do echo "$l" | echo $l | awk '/all/{print 100-$NF}'; done | while read l; do echo "$(date +%s): $l"; done  >> $2/remote_$cpulog
 }
 
 killtree() {
