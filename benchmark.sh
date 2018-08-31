@@ -177,7 +177,7 @@ fi
 
 sudo echo -n "" # Just to acquire sudo
 self_ty=$(cat $1 | grep $(hostname -f) | grep -Eo "\w*$")
-self_host=$(cat $1 | grep $(hostname -f) | grep -Eo "^\w*")
+self_host=$(cat $1 | grep $(hostname -f) | grep -Eo "^[a-z0-9.-_]*")
 shuf $1 | while read -r rem ty
 do
 	if [ "$rem" != "$self_host" ]
